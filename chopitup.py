@@ -103,6 +103,26 @@ class WordSegmentLibrary:
 
         return selected_segments
 
+    def creator_from_words_list(self, input_words_list):
+        """
+        Select word segments from the library based on the input words list, ordered by timestamp.
+        """
+        input_words = input_words_list.lower().split(',')
+        selected_segments = []
+
+        # Collect all word occurrences for the input words
+        for word in input_words:
+            trimmed_word = word.strip()
+            if trimmed_word in self.word_library:
+                selected_segments.extend(self.word_library[trimmed_word])
+            else:
+                print(f"Word '{trimmed_word}' not found in the library")
+
+        # Sort the selected_segments based on their timestamps
+        selected_segments.sort(key=lambda x: x['A'])
+
+        return selected_segments
+
     def get_word_occurrences(self, word):
         """
         Return a list of occurrences for a given word in the library.
@@ -236,6 +256,8 @@ def assemble_video(media_library, segments, output_filename):
         clip.close()
     final_clip.close()
 
+
+
 # all instances of "word" are output into a video
 def create_word_instances_video(word_segment_library, word, output_filename):
     word_library = word_segment_library.word_library    
@@ -303,6 +325,22 @@ def main(args):
         print(f"Video assembled and saved to {output_filename}")
         exit(0)
 
+    if args.wordslist:
+        input_words_list = args.wordslist
+        segments = word_segment_library.creator_from_words_list(input_words_list)
+        print("Selected segments:")
+        for segment in segments:
+            print(segment)
+
+        if args.output:
+            output_filename = args.output
+        else:
+            output_filename = "output_video.mp4"
+
+        assemble_video(word_segment_library, segments, output_filename)
+        print(f"Video assembled and saved to {output_filename}")
+        exit(0)
+
     if args.check_string:
         input_sentence = args.check_string
         print(f"Checking string: {input_sentence}")
@@ -318,6 +356,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--create", metavar="SENTENCE", type=str, help="Create a video using the given input sentence")
     parser.add_argument("--words", metavar="WORD", type=str, help="Create a video of all instances of a given word")
+    parser.add_argument("--wordslist", metavar="WORDSLIST", type=str, help="Create a video using the given comma-separated list of words")
     parser.add_argument("--output", metavar="FILENAME", type=str, help="Specify the output video filename")
 
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
